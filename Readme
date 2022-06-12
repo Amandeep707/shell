@@ -1,1 +1,18 @@
-Test
+./timeconvert.sh: illegal option -- d
+Usage: timeconvert.sh -c [CITY] -s [STATE]
+
+-i input_time
+-o output_time_format
+-f output_field
+
+
+
+
+
+Completed-
+
+inpuut_time and output_time_format is completed, still working on ouutput_field
+
+Qus for Eud:-
+i need you to check the logic, I am uusing is it as expected ? need review from your side before i spend more time on it
+
