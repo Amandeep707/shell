@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -xv
+#set -xv
 
 ABSOLTE_FLAG=0
 DELTA_FLAG=0
