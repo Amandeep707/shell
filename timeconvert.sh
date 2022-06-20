@@ -1,6 +1,9 @@
 #!/bin/bash
 
-#set -xv
+set -xv
+
+ABSOLTE_FLAG=0
+DELTA_FLAG=0
 
 usage() {
    cat 1>&2 <<EOF
@@ -16,7 +19,12 @@ EOF
 
 DateRegX="^[0-9]{2}-[a-zA-Z]{3}-[0-9]{4}$"
 TimeRegX="^[0-9]{2}:[0-9]{2}:[0-9]{2}$"
-RegX="[a-zA-Z]"
+DeltaRegX="^[0-9]{4}$"
+
+AbsoluteTimeRegX="^[0-9]{2}-[a-zA-Z]{3}-[0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2}:[0-9]{2}$"
+DeltaTimeRegX="^[0-9]{4}-[0-9]{2}:[0-9]{2}:[0-9]{2}:[0-9]{2}$"
+#RegX="[a-zA-Z]"  
+RegX="^[a-zA-Z]+$"
 
 FCVTIME() {
  INPUT=$1
@@ -31,11 +39,20 @@ FCVTIME() {
  then
    :
  else   
-   INPUT1=`echo $INPUT | cut -d " " -f1`
-   INPUT2=`echo $INPUT | cut -d " " -f2`
-   if [[ ! ${INPUT1} =~ ${DateRegX} ]]
+   if [[ ${INPUT} =~ ${AbsoluteTimeRegX}  ]]
    then
-     INPUT1=`date +'%d-%b-%Y'`
+     ABSOLUTE_FLAG=1
+     INPUT1=`echo $INPUT | cut -d " " -f1`
+     INPUT2=`echo $INPUT | cut -d " " -f2 | cut -d ":" -f1,2,3`
+
+   elif [[ ${INPUT} =~ ${DeltaTimeReg} ]]
+   then
+     DELTA_FLAG=1
+     INPUT1=`echo $INPUT | cut -d "-" -f1`
+     INPUT2=`echo $INPUT | cut -d "-" -f2 | cut -d ":" -f1,2,3`
+   else
+     echo "Input is not valid"
+     exit 1
    fi
    if [[ ! ${INPUT2} =~ ${TimeRegX} ]]
    then
@@ -46,6 +63,12 @@ FCVTIME() {
  echo "INPUT is $INPUT"
 
 
+if [ ${DELTA_FLAG} -eq 1 ] && [ "${OTF}" != "DELTA" ]
+then
+   echo "If input time is delta , you must specify output_time_format as delta"
+   exit 2;
+fi
+
 ############Output time format###############
  case $OTF in
         "ABSOLUTE")
@@ -55,30 +78,31 @@ FCVTIME() {
             OUTPUT=`date -d "$INPUT" +'%Y-%m-%d %H:%M:%S:%C'`
             ;;
         "DELTA")
-            OUTPUT=`date -d "$INPUT" +'%d-%H:%M:%S:%C'`
+            OUTPUT=`echo $INPUT`
             ;;
         *)  OUTPUT=`date -d "$INPUT" +'%Y-%m-%d %H:%M:%S:%C'`
+            echo "output=$OUTPUT"
             ;;
    esac
 ##########output format#####################
  case $OF in
         "DATE")
-            echo "You choose choice1"
+            echo "OUTPUT is `echo $OUTPUT | cut -d " " -f1`"
             ;;
         "MONTH")
-            echo "you chose choice 2"
+            echo "OUTPUT is `echo $OUTPUT | cut -d " " -f1 | cut -d "-" -f2`"
             ;;
         "SECOND")
-            echo "you chose choice $REPLY which is $opt"
+            echo "OUTPUT is `echo $OUTPUT | cut -d " " -f2 | cut -d ":" -f3`"
             ;;
 	"DAY")
-            echo "you chose choice $REPLY which is $opt"
+            echo "OUTPUT is `echo $OUTPUT | cut -d " " -f1 | cut -d "-" -f1`"
             ;;
 	"TIME")
-            echo "you chose choice $REPLY which is $opt"
+            echo "OUTPUT is `echo $OUTPUT | cut -d " " -f2`"
             ;;
 	"HOUR")
-            echo "you chose choice $REPLY which is $opt"
+            echo "OUTPUT is `echo $OUTPUT | cut -d " " -f2 | cut -d ":" -f1`"
             ;;
 	"WEEKDAY")
             echo "you chose choice $REPLY which is $opt"
@@ -87,10 +111,10 @@ FCVTIME() {
             echo "you chose choice $REPLY which is $opt"
             ;;
 	"YEAR")
-            echo "you chose choice $REPLY which is $opt"
+            echo "OUTPUT is `echo $OUTPUT | cut -d " " -f1 | cut -d "-" -f2`"
             ;;
 	"MINUTE")
-            echo "you chose choice $REPLY which is $opt"
+            echo "OUTPUT is `echo $OUTPUT | cut -d " " -f2 | cut -d ":" -f2`"
             ;;
 	"DAYOFYEAR")
             echo "you chose choice $REPLY which is $opt"
@@ -104,7 +128,7 @@ FCVTIME() {
 	"SECONDOFYEAR")
             echo "you chose choice $REPLY which is $opt"
             ;;
-        *)  echo "OTPUT is $OUTPUT"
+        *)  echo "OUTPUT is $OUTPUT"
             ;;
     esac
 
@@ -120,4 +144,4 @@ do
     esac
 done
 
-FCVTIME "$input_time" "$output_time_format" $output_field
+FCVTIME "$input_time" "$output_time_format" "$output_field"
